@@ -71,6 +71,80 @@ app.delete('/posts/:postId', async (req, res, next) => {
   }
 });
 
+app.post('/items', async (req, res, next) => {
+  try {
+    const { title, price, image, category } = req.body;
+    await db.Items.create({ title, price, image, category });
+    res.status(201).json({ message: '작성 완료!' });
+  } catch (err) {
+    next(err);
+  }
+});
+
+app.get('/items', async (req, res, next) => {
+  try {
+    const items = await db.Items.findAll({
+      attributes: [
+        'itemId',
+        'title',
+        'price',
+        'image',
+        'category',
+        'createdAt',
+      ],
+      order: [['itemId', 'DESC']],
+    });
+    res.status(200).json({ items });
+  } catch (err) {
+    next(err);
+  }
+});
+
+app.get('/items/:itemId', async (req, res, next) => {
+  try {
+    const { itemId } = req.params;
+    const item = await db.Items.findByPk(itemId, {
+      attributes: [
+        'itemId',
+        'title',
+        'price',
+        'image',
+        'category',
+        'createdAt',
+      ],
+    });
+    if (!item) throw new Error('게시글이 없습니다.');
+    res.status(200).json(item);
+  } catch (err) {
+    next(err);
+  }
+});
+
+app.patch('/items/:itemId', async (req, res, next) => {
+  try {
+    const { title, price, image, category } = req.body;
+    const { itemId } = req.params;
+    const item = await db.Items.findByPk(itemId);
+    if (!item) throw new Error('게시글이 없습니다.');
+    await item.update({ title, price, image, category });
+    res.status(201).json({ message: '수정 완료!' });
+  } catch (err) {
+    next(err);
+  }
+});
+
+app.delete('/items/:itemId', async (req, res, next) => {
+  try {
+    const { itemId } = req.params;
+    const item = await db.Items.findByPk(itemId);
+    if (!item) throw new Error('게시글이 없습니다.');
+    await item.destroy();
+    res.status(201).json({ message: '삭제 완료!' });
+  } catch (err) {
+    next(err);
+  }
+});
+
 app.use((err, req, res, next) => {
   console.error(err);
   res.status(999).json({ errorMessage: err.message });
